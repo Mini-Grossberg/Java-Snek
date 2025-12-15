@@ -6,7 +6,17 @@ import javax.swing.*;
 
 class GamePanel extends JPanel {
 	final Color PANEL = new Color(0x383b3d);
-	final int PANELSIZE = 900;
+	final Color SNAKE = new Color(0x84bd91);
+	
+	final int PANELSIZE = 900; 								// Size of the total playable area in pixels.
+	final int SNAKEPIXEL = 20; 								// Size of the snake in pixels.
+	final int GRIDPIXEL = PANELSIZE/SNAKEPIXEL;				// Number of grid boxes.
+	final int MAX_SNAKE_LENGTH = GRIDPIXEL * GRIDPIXEL;		// Victory length - maximum size of the snake.
+	
+	final int[] x = new int[MAX_SNAKE_LENGTH];				// X Coordinates of the Snake.
+	final int[] y = new int[MAX_SNAKE_LENGTH];				// Y Coordinates of the Snake.
+	
+	int snakeLength = 5;									// Initial Length of the Snake.
 	
 	public GamePanel() {
 		this.setBackground(PANEL);
@@ -15,6 +25,39 @@ class GamePanel extends JPanel {
 		this.setPreferredSize(d);
 		this.setMaximumSize(d);
 		this.setMinimumSize(d);
+		
+		for (int i = 0; i < snakeLength; i++) {
+			x[i] = GRIDPIXEL/2 - i;
+			y[i] = GRIDPIXEL/2;
+		}
+	}
+	
+	@Override
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		drawGrid(g);
+		drawSnake(g);
+	}
+
+	public void drawGrid(Graphics g) {
+		g.setColor(Color.BLACK);
+		
+		for (int i = SNAKEPIXEL; i < PANELSIZE; i += SNAKEPIXEL) {
+
+			// x coord
+			g.drawLine(i, 0, i, PANELSIZE);
+			
+			// y coord
+			g.drawLine(0, i, PANELSIZE, i);
+		}
+	}
+	
+	public void drawSnake(Graphics g) {
+		g.setColor(SNAKE);
+		
+		for (int i = 0; i < snakeLength; i++)	{
+			g.fillRect(x[i] * SNAKEPIXEL, y[i] * SNAKEPIXEL, SNAKEPIXEL, SNAKEPIXEL);
+		}
 	}
 }
 
