@@ -11,7 +11,7 @@ class GamePanel extends JPanel implements ActionListener{
 	final Color FOOD = new Color(0xe3496f);
 	
 	final int PANELSIZE = 900; 								// Size of the total playable area in pixels.
-	final int SNAKEPIXEL = 20; 								// Size of the snake in pixels.
+	final int SNAKEPIXEL = 30; 								// Size of the snake in pixels.
 	final int GRIDPIXEL = PANELSIZE/SNAKEPIXEL;				// Number of grid boxes.
 	final int MAX_SNAKE_LENGTH = GRIDPIXEL * GRIDPIXEL;		// Victory length - maximum size of the snake.
 	
@@ -29,10 +29,13 @@ class GamePanel extends JPanel implements ActionListener{
 	private int foodX;
 	private int foodY;
 	
-	boolean first = true;
+	boolean directionChangeFlag = false;
 	
 	Timer timer;
-	int DELAY = 60;
+	final int DELAY = 20;
+	
+	private double moveCounter = 0;
+	private double currentSpeed = 3;
 	
 	static int direction = RIGHT;
 	boolean running = false;
@@ -50,10 +53,7 @@ class GamePanel extends JPanel implements ActionListener{
 			y[i] = GRIDPIXEL/2;
 		}
 		
-		this.addKeyListener(new KeyPressed());
-		this.setFocusable(true);
-		this.requestFocusInWindow(true);
-		
+		setupKeyBindings();
 		startGame();
 	}
 	
@@ -64,6 +64,61 @@ class GamePanel extends JPanel implements ActionListener{
 		timer.start();
 	}
 	
+	private void setupKeyBindings() {
+		InputMap inputMap = this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+		ActionMap actionMap = this.getActionMap();
+		
+		KeyStroke keyW = KeyStroke.getKeyStroke(KeyEvent.VK_W, 0);
+		KeyStroke keyA = KeyStroke.getKeyStroke(KeyEvent.VK_A, 0);
+		KeyStroke keyS = KeyStroke.getKeyStroke(KeyEvent.VK_S, 0);
+		KeyStroke keyD = KeyStroke.getKeyStroke(KeyEvent.VK_D, 0);
+		
+		inputMap.put(keyW, "moveUp");
+		inputMap.put(keyA, "moveLeft");
+		inputMap.put(keyS, "moveDown");
+		inputMap.put(keyD, "moveRight");
+		
+		actionMap.put("moveUp", new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (GamePanel.direction != DOWN && !directionChangeFlag) {
+					GamePanel.direction = UP;
+					directionChangeFlag = true;
+				}
+			}
+		});
+		
+		actionMap.put("moveDown", new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (GamePanel.direction != UP && !directionChangeFlag) {
+					GamePanel.direction = DOWN;
+					directionChangeFlag = true;
+				}
+			}
+		});
+		
+		actionMap.put("moveLeft", new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (GamePanel.direction != RIGHT && !directionChangeFlag) {
+					GamePanel.direction = LEFT;
+					directionChangeFlag = true;
+				}
+			}
+		});
+		
+		actionMap.put("moveRight", new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (GamePanel.direction != LEFT && !directionChangeFlag) {
+					GamePanel.direction = RIGHT;
+					directionChangeFlag = true;
+				}
+			}
+		});
+	}
+	
 	public void initFood() {
 		foodX = random.nextInt(GRIDPIXEL-2);
 		foodY = random.nextInt(GRIDPIXEL-2);
@@ -72,8 +127,16 @@ class GamePanel extends JPanel implements ActionListener{
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (running) {
-			move();
-			checkFood();
+			moveCounter += 0.2;
+			
+			if (moveCounter >= currentSpeed || currentSpeed == 0) {
+				move();
+				checkFood();
+				
+				directionChangeFlag = false;
+				
+				moveCounter = 0;
+			}
 		}
 		
 		repaint();
@@ -104,6 +167,7 @@ class GamePanel extends JPanel implements ActionListener{
 	public void checkFood() {
 		if ((x[0] == foodX && y[0] == foodY)) {
 			snakeLength++;
+			currentSpeed -= 0.2;
 			initFood();
 		}
 	}
@@ -113,6 +177,8 @@ class GamePanel extends JPanel implements ActionListener{
 		drawGrid(g);
 		spawnFood(g);
 		drawSnake(g);
+		
+		Toolkit.getDefaultToolkit().sync();
 	}
 
 	public void drawGrid(Graphics g) {
