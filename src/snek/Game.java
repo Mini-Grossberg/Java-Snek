@@ -11,7 +11,7 @@ class GamePanel extends JPanel implements ActionListener{
 	final Color FOOD = new Color(0xe3496f);
 	
 	final int PANELSIZE = 900; 								// Size of the total playable area in pixels.
-	final int SNAKEPIXEL = 30; 								// Size of the snake in pixels.
+	final int SNAKEPIXEL = 60; 								// Size of the snake in pixels.
 	final int GRIDPIXEL = PANELSIZE/SNAKEPIXEL;				// Number of grid boxes.
 	final int MAX_SNAKE_LENGTH = GRIDPIXEL * GRIDPIXEL;		// Victory length - maximum size of the snake.
 	
@@ -123,12 +123,40 @@ class GamePanel extends JPanel implements ActionListener{
 	}
 	
 	public void checkCollisions() {
-		for (int i = 0; i < snakeLength; i > 0; )
+		// -- Collision with Self -- 
+		for (int i = snakeLength; i > 0; i--) {
+			if ((x[0] == x[i]) && y[0] == y[i]) {
+				running = false;
+			}
+		}
+		
+		// -- Collision with Walls --
+		if (x[0] < 0) {
+			running = false;
+		}
+		else if (y[0] < 0) {
+			running = false;
+		}
+		else if (x[0] > GRIDPIXEL) {
+			running = false;
+		}
+		else if (x[0] > GRIDPIXEL) {
+			running = false;
+		}
+		
+		// -- Game Over --
+		if (!running) stopGame();
 	}
 	
 	public void initFood() {
 		foodX = random.nextInt(GRIDPIXEL-2);
 		foodY = random.nextInt(GRIDPIXEL-2);
+	}
+	
+	public boolean checkInitFood(int a, int b) {
+		for (int i = 0; i < snakeLength; i++) {
+			if (a == x[i] && b == y[i]) return false;
+		}return true;
 	}
 	
 	@Override
@@ -139,6 +167,7 @@ class GamePanel extends JPanel implements ActionListener{
 			if (moveCounter >= currentSpeed || currentSpeed == 0) {
 				move();
 				checkFood();
+				checkCollisions();
 				
 				directionChangeFlag = false;
 				
@@ -175,15 +204,22 @@ class GamePanel extends JPanel implements ActionListener{
 		if ((x[0] == foodX && y[0] == foodY)) {
 			snakeLength++;
 			currentSpeed -= 0.12;
-			initFood();
+			while (!checkInitFood(foodX, foodY)) initFood();
 		}
 	}
 	
 	@Override
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		spawnFood(g);
-		drawSnake(g);
+		
+		if(running) {
+			spawnFood(g);
+			drawSnake(g);
+		}
+		
+		else {
+			gameOver(g);
+		}
 		
 		Toolkit.getDefaultToolkit().sync();
 	}
@@ -214,6 +250,36 @@ class GamePanel extends JPanel implements ActionListener{
 		if (timer != null) {
 			timer.stop();
 		}
+	}
+	
+	public void resetGame() {
+		stopGame();
+		snakeLength = 5;
+		for (int i = 0; i < snakeLength; i++) {
+			x[i] = GRIDPIXEL / 2 - i;
+			y[i] = GRIDPIXEL / 2;
+		}
+		
+		currentSpeed = 3;
+		moveCounter = 0;
+		
+		direction = RIGHT;
+		directionChangeFlag = false;
+		
+		startGame();
+		repaint();
+	}
+	
+	public void gameOver(Graphics g) {
+		String message = "Game Over!\n\nScore: " + (snakeLength - 5);
+		
+		g.setColor(FOOD);
+		g.setFont(new Font("Garamond", Font.BOLD, 75));
+		FontMetrics metrics = getFontMetrics(g.getFont());
+		
+		// Center the text:
+		g.drawString(message, 
+				(PANELSIZE - metrics.stringWidth(message)) / 2, PANELSIZE / 2);
 	}
 }
 
@@ -306,8 +372,17 @@ public class Game {
 			System.exit(0);
 		});
 		
+		// -- Restart Button --
+		JButton restart = new JButton("Restart");
+		restart.setFont(new Font("Garamond", Font.BOLD, 20));
+		
+		restart.addActionListener(e -> {
+			playableBG.resetGame();
+		});
+		
 		panel.add(playPause);
 		panel.add(quit);
+		panel.add(restart);
 		
 		// Add empty space fillers
 	    for(int i = 0; i < 8; i++) {
