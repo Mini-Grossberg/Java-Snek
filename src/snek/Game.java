@@ -32,7 +32,7 @@ class GamePanel extends JPanel implements ActionListener{
 	boolean directionChangeFlag = false;
 	
 	Timer timer;
-	final int DELAY = 40;
+	final int DELAY = 60;
 	
 	private double moveCounter = 0;
 	private double currentSpeed = 3;
@@ -162,7 +162,7 @@ class GamePanel extends JPanel implements ActionListener{
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (running) {
-			moveCounter += 0.2;
+			moveCounter += 0.1;
 			
 			if (moveCounter >= currentSpeed || currentSpeed == 0) {
 				move();
@@ -203,7 +203,7 @@ class GamePanel extends JPanel implements ActionListener{
 	public void checkFood() {
 		if ((x[0] == foodX && y[0] == foodY)) {
 			snakeLength++;
-			currentSpeed -= 0.12;
+			currentSpeed /= 1.5;
 			while (!checkInitFood(foodX, foodY)) initFood();
 		}
 	}
