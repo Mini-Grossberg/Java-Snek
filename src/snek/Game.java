@@ -6,9 +6,10 @@ import javax.swing.*;
 import java.util.Random;
 
 class GamePanel extends JPanel implements ActionListener{
-	final Color PANEL = new Color(0x383b3d);
-	final Color SNAKE = new Color(0x84bd91);
-	final Color FOOD = new Color(0xe3496f);
+	final Color PANEL = new Color(0xEBF5F7);				// Colour for the Game Area
+	final Color SNAKE = new Color(0xA5D8C4);				// Colour for the Snake
+	final Color FOOD = new Color(0xFFC0CB);					// Colour for the Food
+	final Color TEXT = new Color(0x606060);					// Colour for the Text
 	
 	final int PANELSIZE = 900; 								// Size of the total playable area in pixels.
 	final int SNAKEPIXEL = 60; 								// Size of the snake in pixels.
@@ -20,26 +21,31 @@ class GamePanel extends JPanel implements ActionListener{
 	
 	int snakeLength = 5;									// Initial Length of the Snake.
 	
-	static final int UP = -2;								// Direction -- UP
-	static final int DOWN = 2;								// Direction -- DOWN
-	static final int RIGHT = 1;								// Direction -- RIGHT
-	static final int LEFT = -1;								// Direction -- LEFT
+	static final int UP = -2;								// Direction -- UP.
+	static final int DOWN = 2;								// Direction -- DOWN.
+	static final int RIGHT = 1;								// Direction -- RIGHT.
+	static final int LEFT = -1;								// Direction -- LEFT.
 	
 	private final Random random = new Random();
-	private int foodX;
-	private int foodY;
+	private int foodX;										// X Coordinate of the Food.
+	private int foodY;										// Y Coordinate of the Food.
 	
-	boolean directionChangeFlag = false;
+	boolean directionChangeFlag = false;					// Used this to avoid immediate changing of direction allowing for the snake to change directions illegally.
 	
 	Timer timer;
-	final int DELAY = 60;
 	
+	final int DELAY = 100;
+	
+	// -- Speed/FPS Control --
 	private double moveCounter = 0;
 	private double currentSpeed = 3;
 	
+	// -- Direction Control --
 	static int direction = RIGHT;
+	
 	boolean running = false;
 	
+	// Run game -- Constructor --
 	public GamePanel() {
 		this.setBackground(PANEL);
 		
@@ -57,16 +63,7 @@ class GamePanel extends JPanel implements ActionListener{
 		startGame();
 	}
 	
-	public void startGame() {
-		initFood();
-		running = true;
-		
-		if(timer == null) {
-			timer = new Timer(DELAY, this);
-		}
-		timer.start();
-	}
-	
+	// -- Keybinds --
 	private void setupKeyBindings() {
 		InputMap inputMap = this.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
 		ActionMap actionMap = this.getActionMap();
@@ -122,6 +119,7 @@ class GamePanel extends JPanel implements ActionListener{
 		});
 	}
 	
+	// -- Check if the snake is running into anything --
 	public void checkCollisions() {
 		// -- Collision with Self -- 
 		for (int i = snakeLength; i > 0; i--) {
@@ -148,21 +146,24 @@ class GamePanel extends JPanel implements ActionListener{
 		if (!running) stopGame();
 	}
 	
+	// -- Assign new food spawn locations -- 
 	public void initFood() {
 		foodX = random.nextInt(GRIDPIXEL-2);
 		foodY = random.nextInt(GRIDPIXEL-2);
 	}
 	
+	// -- Check if the food is spawning inside the snake --
 	public boolean checkInitFood(int a, int b) {
 		for (int i = 0; i < snakeLength; i++) {
 			if (a == x[i] && b == y[i]) return false;
 		}return true;
 	}
 	
+	// -- Main Game Loop --
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (running) {
-			moveCounter += 0.1;
+			moveCounter += 0.2;
 			
 			if (moveCounter >= currentSpeed || currentSpeed == 0) {
 				move();
@@ -178,6 +179,7 @@ class GamePanel extends JPanel implements ActionListener{
 		repaint();
 	}
 	
+	// -- Used to change the location of the snake every frame -- 
 	public void move() {
 		for (int i = snakeLength; i > 0; i--) {
 			x[i] = x[i - 1];
@@ -199,7 +201,8 @@ class GamePanel extends JPanel implements ActionListener{
 			break;
 		}
 	}
-	
+
+	// -- checks if the food is eaten by the snake --
 	public void checkFood() {
 		if ((x[0] == foodX && y[0] == foodY)) {
 			snakeLength++;
@@ -208,6 +211,7 @@ class GamePanel extends JPanel implements ActionListener{
 		}
 	}
 	
+	// -- Paint the graphics --
 	@Override
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
@@ -221,9 +225,10 @@ class GamePanel extends JPanel implements ActionListener{
 			gameOver(g);
 		}
 		
-		Toolkit.getDefaultToolkit().sync();
+		Toolkit.getDefaultToolkit().sync(); // GODSEND -- syncs the painting of the graphics with the timer --
 	}
 	
+	// -- Draw the snake --
 	public void drawSnake(Graphics g) {
 		g.setColor(SNAKE);
 		
@@ -232,12 +237,26 @@ class GamePanel extends JPanel implements ActionListener{
 		}
 	}
 	
+	// -- Make the food --
 	public void spawnFood(Graphics g) {
 		g.setColor(FOOD);
 			
 		g.fillRect(foodX * SNAKEPIXEL, foodY * SNAKEPIXEL, SNAKEPIXEL, SNAKEPIXEL);
 	}
 	
+	
+	// Run Game -- Initial Settings --
+	public void startGame() {
+		initFood();
+		running = true;
+		
+		if(timer == null) {
+			timer = new Timer(DELAY, this);
+		}
+		timer.start();
+	}
+	
+	// -- Continues the game of paused in between -- 
 	public void runGame() {
 		running = true;
 		if (timer != null) {
@@ -245,6 +264,7 @@ class GamePanel extends JPanel implements ActionListener{
 		}
 	}
 	
+	// -- Pauses/Stops the game --
 	public void stopGame() {
 		running = false;
 		if (timer != null) {
@@ -252,6 +272,7 @@ class GamePanel extends JPanel implements ActionListener{
 		}
 	}
 	
+	// -- Resets everything to scratch and runs the game --
 	public void resetGame() {
 		stopGame();
 		snakeLength = 5;
@@ -270,10 +291,11 @@ class GamePanel extends JPanel implements ActionListener{
 		repaint();
 	}
 	
+	// GAME OVER
 	public void gameOver(Graphics g) {
 		String message = "Game Over!\n\nScore: " + (snakeLength - 5);
 		
-		g.setColor(FOOD);
+		g.setColor(TEXT);
 		g.setFont(new Font("Garamond", Font.BOLD, 75));
 		FontMetrics metrics = getFontMetrics(g.getFont());
 		
@@ -283,6 +305,7 @@ class GamePanel extends JPanel implements ActionListener{
 	}
 }
 
+// -- Read Key Pressed EVENT --
 class KeyPressed extends KeyAdapter {
 	@Override
 	public void keyPressed(KeyEvent e) {
@@ -307,9 +330,11 @@ class KeyPressed extends KeyAdapter {
 	}
 }
 
+// -- BASIC WINDOW AND MAIN FUNCTION --
 public class Game {
-	final Color BG = new Color(0x262829);
-	final Color BUTTON = new Color(0xb0b0b0);
+	final Color BG = new Color(0x606060);					// Colour of the Background
+	final Color BUTTON_PANEL_COLOR = new Color(0xb0b0b0);	// Colour of the Button Panel
+	final Color BUTTON_TEXT_COLOR = new Color(0x404040);	// Colour of the Button Text
 	
 	GamePanel playableBG = new GamePanel();
 	
@@ -317,6 +342,7 @@ public class Game {
 		screenInit();
 	}
 	
+	// -- Initialize Window --
 	private void screenInit() {
 		// Initialization
 		JFrame frame = new JFrame();
@@ -343,15 +369,22 @@ public class Game {
 		frame.setVisible(true);
 	}
 	
+	// -- Control Buttons -- 
 	private JPanel createControlPanel(JFrame frame) {
 		JPanel panel = new JPanel();
 		panel.setLayout(new GridLayout(10, 1, 10, 20));
-		panel.setBackground(BUTTON);
-		panel.setBorder(BorderFactory.createEmptyBorder(50 ,50 ,50 ,50));
 		
-		// -- Button for Playing game and Stopping play --
-		JButton playPause = new JButton("Play");
-		playPause.setFont(new Font("Garamond", Font.BOLD, 20));
+		panel.setBackground(BUTTON_PANEL_COLOR);
+        panel.setBorder(BorderFactory.createEmptyBorder(50 ,50 ,50 ,50));
+		
+		final Color BUTTON_COLOR = new Color(0xFFFFFF); // White buttons on pink panel
+        final Font BUTTON_FONT = new Font("Garamond", Font.BOLD, 20);
+		
+		// --- Play/Pause Button ---
+        JButton playPause = new JButton("Play");
+        playPause.setFont(BUTTON_FONT);
+        playPause.setBackground(BUTTON_COLOR);
+        playPause.setForeground(BUTTON_TEXT_COLOR);
 		
 		playPause.addActionListener(e -> {
 			if (playableBG.running) {
@@ -363,18 +396,22 @@ public class Game {
 			}
 		});
 		
-		// -- Quit Button --
-		JButton quit = new JButton("Quit");
-		quit.setFont(new Font("Garamond", Font.BOLD, 20));
-		
+		// --- Quit Button ---
+        JButton quit = new JButton("Quit");
+        quit.setFont(BUTTON_FONT);
+        quit.setBackground(BUTTON_COLOR);
+        quit.setForeground(BUTTON_TEXT_COLOR);
+        
 		quit.addActionListener(e -> {
 			frame.dispose();
 			System.exit(0);
 		});
 		
-		// -- Restart Button --
-		JButton restart = new JButton("Restart");
-		restart.setFont(new Font("Garamond", Font.BOLD, 20));
+		// --- Restart Button ---
+        JButton restart = new JButton("Restart");
+        restart.setFont(BUTTON_FONT);
+        restart.setBackground(BUTTON_COLOR);
+        restart.setForeground(BUTTON_TEXT_COLOR);
 		
 		restart.addActionListener(e -> {
 			playableBG.resetGame();
@@ -384,14 +421,17 @@ public class Game {
 		panel.add(quit);
 		panel.add(restart);
 		
-		// Add empty space fillers
-	    for(int i = 0; i < 8; i++) {
-	        panel.add(new JLabel("")); 
-	    }
+		// Add empty space fillers (set them to the panel background color)
+        for(int i = 0; i < 7; i++) { // Changed to 7 to account for 3 buttons
+            JLabel filler = new JLabel("");
+            filler.setBackground(BUTTON_PANEL_COLOR);
+            panel.add(filler); 
+        }
 		
 		return panel;
 	}
 	
+	// -- MAIN FUNCTION --
 	public static void main(String args[]) {
 		SwingUtilities.invokeLater(() -> {
 			new Game();
