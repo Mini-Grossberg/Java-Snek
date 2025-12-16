@@ -32,7 +32,7 @@ class GamePanel extends JPanel implements ActionListener{
 	boolean directionChangeFlag = false;
 	
 	Timer timer;
-	final int DELAY = 20;
+	final int DELAY = 40;
 	
 	private double moveCounter = 0;
 	private double currentSpeed = 3;
@@ -60,7 +60,10 @@ class GamePanel extends JPanel implements ActionListener{
 	public void startGame() {
 		initFood();
 		running = true;
-		timer = new Timer(DELAY, this);
+		
+		if(timer == null) {
+			timer = new Timer(DELAY, this);
+		}
 		timer.start();
 	}
 	
@@ -119,6 +122,10 @@ class GamePanel extends JPanel implements ActionListener{
 		});
 	}
 	
+	public void checkCollisions() {
+		for (int i = 0; i < snakeLength; i > 0; )
+	}
+	
 	public void initFood() {
 		foodX = random.nextInt(GRIDPIXEL-2);
 		foodY = random.nextInt(GRIDPIXEL-2);
@@ -167,31 +174,18 @@ class GamePanel extends JPanel implements ActionListener{
 	public void checkFood() {
 		if ((x[0] == foodX && y[0] == foodY)) {
 			snakeLength++;
-			currentSpeed -= 0.2;
+			currentSpeed -= 0.12;
 			initFood();
 		}
 	}
+	
 	@Override
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		drawGrid(g);
 		spawnFood(g);
 		drawSnake(g);
 		
 		Toolkit.getDefaultToolkit().sync();
-	}
-
-	public void drawGrid(Graphics g) {
-		g.setColor(Color.BLACK);
-		
-		for (int i = SNAKEPIXEL; i < PANELSIZE; i += SNAKEPIXEL) {
-
-			// x coord
-			g.drawLine(i, 0, i, PANELSIZE);
-			
-			// y coord
-			g.drawLine(0, i, PANELSIZE, i);
-		}
 	}
 	
 	public void drawSnake(Graphics g) {
@@ -206,6 +200,20 @@ class GamePanel extends JPanel implements ActionListener{
 		g.setColor(FOOD);
 			
 		g.fillRect(foodX * SNAKEPIXEL, foodY * SNAKEPIXEL, SNAKEPIXEL, SNAKEPIXEL);
+	}
+	
+	public void runGame() {
+		running = true;
+		if (timer != null) {
+			timer.start();
+		}
+	}
+	
+	public void stopGame() {
+		running = false;
+		if (timer != null) {
+			timer.stop();
+		}
 	}
 }
 
@@ -235,6 +243,9 @@ class KeyPressed extends KeyAdapter {
 
 public class Game {
 	final Color BG = new Color(0x262829);
+	final Color BUTTON = new Color(0xb0b0b0);
+	
+	GamePanel playableBG = new GamePanel();
 	
 	public Game() {
 		screenInit();
@@ -245,7 +256,6 @@ public class Game {
 		JFrame frame = new JFrame();
 		
 		// Playable Background
-		GamePanel playableBG = new GamePanel();
 		JPanel center = new JPanel();
 		center.setBackground(BG);
 		center.setLayout(new GridBagLayout());
@@ -258,10 +268,53 @@ public class Game {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setLocationRelativeTo(null);
 		
+		JPanel controlPanel = createControlPanel(frame);
+		frame.getContentPane().add(controlPanel, BorderLayout.EAST);
+		
 		// Colour setting
 		frame.getContentPane().setBackground(BG);
 		
 		frame.setVisible(true);
+	}
+	
+	private JPanel createControlPanel(JFrame frame) {
+		JPanel panel = new JPanel();
+		panel.setLayout(new GridLayout(10, 1, 10, 20));
+		panel.setBackground(BUTTON);
+		panel.setBorder(BorderFactory.createEmptyBorder(50 ,50 ,50 ,50));
+		
+		// -- Button for Playing game and Stopping play --
+		JButton playPause = new JButton("Play");
+		playPause.setFont(new Font("Garamond", Font.BOLD, 20));
+		
+		playPause.addActionListener(e -> {
+			if (playableBG.running) {
+				playableBG.stopGame();
+				playPause.setText("Play");
+			}else {
+				playableBG.runGame();
+				playPause.setText("Stop");
+			}
+		});
+		
+		// -- Quit Button --
+		JButton quit = new JButton("Quit");
+		quit.setFont(new Font("Garamond", Font.BOLD, 20));
+		
+		quit.addActionListener(e -> {
+			frame.dispose();
+			System.exit(0);
+		});
+		
+		panel.add(playPause);
+		panel.add(quit);
+		
+		// Add empty space fillers
+	    for(int i = 0; i < 8; i++) {
+	        panel.add(new JLabel("")); 
+	    }
+		
+		return panel;
 	}
 	
 	public static void main(String args[]) {
